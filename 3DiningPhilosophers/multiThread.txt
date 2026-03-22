@@ -1,0 +1,38 @@
+## method1
+
+- **Logic**:
+  - A lambda is defined that captures the philosopher ID `i` and the `MultiThread` object `mt` by reference.
+  - Inside the lambda, the three function objects (`pickLeft`, `pickRight`, `eat`) are defined as lambdas that perform synchronized output.
+  - The lambda then calls `mt.performAction(i, pickLeft, pickRight, eat)` to execute the philosopher's action.
+- **Code Snippet**:
+  ```cpp
+  threads.emplace_back([&, i]() {
+      auto pickLeft = [&, i]() { /* synchronized output */ };
+      auto pickRight = [&, i]() { /* synchronized output */ };
+      auto eat = [&, i]() { /* synchronized output */ };
+      mt.performAction(i, pickLeft, pickRight, eat);
+  });
+  ```
+- **Pros**: Allows for easy addition of setup or teardown code inside the lambda. The lambda acts as a wrapper, providing flexibility for more complex thread logic.
+- **Cons**: Slightly more verbose due to the extra lambda layer.
+
+## method 2
+  - The thread is created by passing the member function pointer `&MultiThread::performAction`, a reference to the object `&mt`, the philosopher ID `i`, and the three function objects directly to `std::thread`.
+- **Code Snippet**:
+  ```cpp
+  auto pickLeft = [&, i]() { /* synchronized output */ };
+  auto pickRight = [&, i]() { /* synchronized output */ };
+  auto eat = [&, i]() { /* synchronized output */ };
+  threads.emplace_back(&MultiThread::performAction, &mt, i, pickLeft, pickRight, eat);
+  ```
+- **Pros**: More concise and directly expresses the intent of running a specific member function in a thread. Avoids the extra lambda wrapper, making the code cleaner.
+- **Cons**: The function objects must be defined before thread creation, which is fine here but might be less flexible if complex per-thread setup is needed.
+
+## Key Differences
+- **Syntax and Approach**:
+  - `multithread.cpp`: Wraps the member function call in a lambda that the thread executes.
+  - `multithread2.cpp`: Directly binds the member function to the thread using its pointer.
+- **Readability**: method2 is often considered more readable for simple cases like this, as it clearly shows what function and object are being used.
+- **Flexibility**: method1 offers more flexibility if you need to perform additional operations in the thread before or after calling the member function.
+- **Performance**: Both approaches have negligible performance differences; the choice is mainly stylistic.
+
